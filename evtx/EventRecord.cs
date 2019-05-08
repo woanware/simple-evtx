@@ -76,25 +76,25 @@ namespace evtx
                     EventId = eventId.ValueAsInt;
                 }
 
-                if (level != null)
-                {
-                    Level = level.ValueAsInt;
-                }
+                //if (level != null)
+                //{
+                //    Level = level.ValueAsInt;
+                //}
 
-                if (eventRecordId != null)
-                {
-                    EventRecordId = eventRecordId.Value;
-                }
+                //if (eventRecordId != null)
+                //{
+                //    EventRecordId = eventRecordId.Value;
+                //}
 
-                if (processId != null)
-                {
-                    ProcessId = int.Parse(processId);
-                }
+                //if (processId != null)
+                //{
+                //    ProcessId = int.Parse(processId);
+                //}
 
-                if (threadId != null)
-                {
-                    ThreadId = int.Parse(threadId);
-                }
+                //if (threadId != null)
+                //{
+                //    ThreadId = int.Parse(threadId);
+                //}
 
                 var payloadNode = nav.SelectSingleNode(@"/Event/EventData");
                 if (payloadNode == null)
@@ -105,119 +105,117 @@ namespace evtx
                 var payloadXml = payloadNode?.OuterXml;
 
 
-                if (EventLog.EventLogMaps.ContainsKey($"{EventId}-{channel.ToString().ToUpperInvariant()}"))
-                {
-                    l.Trace($"Found map for event id {EventId} with Channel '{channel}'!");
-                    var map = EventLog.EventLogMaps[$"{EventId}-{channel.ToString().ToUpperInvariant()}"];
+                //if (EventLog.EventLogMaps.ContainsKey($"{EventId}-{channel.ToString().ToUpperInvariant()}"))
+                //{
+                //    l.Trace($"Found map for event id {EventId} with Channel '{channel}'!");
+                //    var map = EventLog.EventLogMaps[$"{EventId}-{channel.ToString().ToUpperInvariant()}"];
 
-                    MapDescription = map.Description;
+                //    MapDescription = map.Description;
 
-                    foreach (var mapEntry in map.Maps)
-                    {
-                        var valProps = new Dictionary<string, string>();
+                //    foreach (var mapEntry in map.Maps)
+                //    {
+                //        var valProps = new Dictionary<string, string>();
 
-                        foreach (var me in mapEntry.Values)
-                        {
-                            //xpath out variables
-                            var propVal = nav.SelectSingleNode(me.Value);
-                            if (propVal != null)
-                            {
-                                var propValue = propVal.Value;
+                //        foreach (var me in mapEntry.Values)
+                //        {
+                //            //xpath out variables
+                //            var propVal = nav.SelectSingleNode(me.Value);
+                //            if (propVal != null)
+                //            {
+                //                var propValue = propVal.Value;
 
-                                if (me.Refine.IsNullOrEmpty() == false)
-                                {
-                                    var hits = new List<string>();
+                //                if (me.Refine.IsNullOrEmpty() == false)
+                //                {
+                //                    var hits = new List<string>();
 
-                                    //regex time
-                                    MatchCollection allMatchResults = null;
-                                    try {
-                                        Regex regexObj = new Regex(me.Refine, RegexOptions.IgnoreCase);
-                                        allMatchResults = regexObj.Matches(propValue);
-                                        if (allMatchResults.Count > 0) {
-                                            // Access individual matches using allMatchResults.Item[]
+                //                    //regex time
+                //                    MatchCollection allMatchResults = null;
+                //                    try {
+                //                        Regex regexObj = new Regex(me.Refine, RegexOptions.IgnoreCase);
+                //                        allMatchResults = regexObj.Matches(propValue);
+                //                        if (allMatchResults.Count > 0) {
+                //                            // Access individual matches using allMatchResults.Item[]
 
-                                            foreach (Match allMatchResult in allMatchResults)
-                                            {
-                                                hits.Add(allMatchResult.Value);
-                                            }
+                //                            foreach (Match allMatchResult in allMatchResults)
+                //                            {
+                //                                hits.Add(allMatchResult.Value);
+                //                            }
 
-                                            propValue = string.Join(" | ", hits);
+                //                            propValue = string.Join(" | ", hits);
 
-                                        } 
+                //                        } 
 
-                                    } catch (ArgumentException ) {
-                                        // Syntax error in the regular expression
-                                    }
+                //                    } catch (ArgumentException ) {
+                //                        // Syntax error in the regular expression
+                //                    }
 
-                                }
+                //                }
 
-                                valProps.Add(me.Name, propValue);
-                            }
-                            else
-                            {
-                                valProps.Add(me.Name, string.Empty);
-                                l.Warn(
-                                    $"Record # {RecordNumber} (Event Record Id: {EventRecordId}): In map for event '{map.EventId}', Property '{me.Value}' not found! Replacing with empty string");
-                            }
-                        }
+                //                valProps.Add(me.Name, propValue);
+                //            }
+                //            else
+                //            {
+                //                valProps.Add(me.Name, string.Empty);
+                //                l.Warn(
+                //                    $"Record # {RecordNumber} (Event Record Id: {EventRecordId}): In map for event '{map.EventId}', Property '{me.Value}' not found! Replacing with empty string");
+                //            }
+                //        }
 
-                        //we have the values, now substitute
-                        var propertyValue = mapEntry.PropertyValue;
-                        foreach (var valProp in valProps)
-                        {
-                            propertyValue = propertyValue.Replace($"%{valProp.Key}%", valProp.Value);
-                        }
+                //        //we have the values, now substitute
+                //        var propertyValue = mapEntry.PropertyValue;
+                //        foreach (var valProp in valProps)
+                //        {
+                //            propertyValue = propertyValue.Replace($"%{valProp.Key}%", valProp.Value);
+                //        }
 
-                        var propertyToUpdate = mapEntry.Property.ToUpperInvariant();
+                //        var propertyToUpdate = mapEntry.Property.ToUpperInvariant();
 
-                        if (valProps.Count == 0)
-                        {
-                            propertyToUpdate = "NOMATCH"; //prevents variables from showing up in the CSV
-                        }
+                //        if (valProps.Count == 0)
+                //        {
+                //            propertyToUpdate = "NOMATCH"; //prevents variables from showing up in the CSV
+                //        }
 
-                        //we should now have our new value, so stick it in its place
-                        switch (propertyToUpdate)
-                        {
-                            case "USERNAME":
-                                UserName = propertyValue;
-                                break;
-                            case "REMOTEHOST":
-                                RemoteHost = propertyValue;
-                                break;
-                            case "EXECUTABLEINFO":
-                                ExecutableInfo = propertyValue;
-                                break;
-                            case "PAYLOADDATA1":
-                                PayloadData1 = propertyValue;
-                                break;
-                            case "PAYLOADDATA2":
-                                PayloadData2 = propertyValue;
-                                break;
-                            case "PAYLOADDATA3":
-                                PayloadData3 = propertyValue;
-                                break;
-                            case "PAYLOADDATA4":
-                                PayloadData4 = propertyValue;
-                                break;
-                            case "PAYLOADDATA5":
-                                PayloadData5 = propertyValue;
-                                break;
-                            case "PAYLOADDATA6":
-                                PayloadData6 = propertyValue;
-                                break;
-                            case "NOMATCH":
-                                //when a property was not found.
-                                break;
-                            default:
-                                l.Warn(
-                                    $"Unknown property name '{propertyToUpdate}'! Dropping mapping value of '{propertyValue}'");
-                                break;
-                        }
-                    }
-                }
+                //        //we should now have our new value, so stick it in its place
+                //        switch (propertyToUpdate)
+                //        {
+                //            case "USERNAME":
+                //                UserName = propertyValue;
+                //                break;
+                //            case "REMOTEHOST":
+                //                RemoteHost = propertyValue;
+                //                break;
+                //            case "EXECUTABLEINFO":
+                //                ExecutableInfo = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA1":
+                //                PayloadData1 = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA2":
+                //                PayloadData2 = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA3":
+                //                PayloadData3 = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA4":
+                //                PayloadData4 = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA5":
+                //                PayloadData5 = propertyValue;
+                //                break;
+                //            case "PAYLOADDATA6":
+                //                PayloadData6 = propertyValue;
+                //                break;
+                //            case "NOMATCH":
+                //                //when a property was not found.
+                //                break;
+                //            default:
+                //                l.Warn(
+                //                    $"Unknown property name '{propertyToUpdate}'! Dropping mapping value of '{propertyValue}'");
+                //                break;
+                //}
 
                 //sanity checks
-                UserId = userId ?? string.Empty;
+                //UserId = userId ?? string.Empty;
                 Provider = provider ?? string.Empty;
                 Channel = channel?.Value ?? string.Empty;
                 Computer = computer?.Value ?? string.Empty;
@@ -225,30 +223,30 @@ namespace evtx
             }
         }
 
-        public string PayloadData1 { get; }
-        public string PayloadData2 { get; }
-        public string PayloadData3 { get; }
-        public string PayloadData4 { get; }
-        public string PayloadData5 { get; }
-        public string PayloadData6 { get; }
-        public string UserName { get; }
-        public string RemoteHost { get; }
-        public string ExecutableInfo { get; }
-        public string MapDescription { get; }
+        //public string PayloadData1 { get; }
+        //public string PayloadData2 { get; }
+        //public string PayloadData3 { get; }
+       // public string PayloadData4 { get; }
+       // public string PayloadData5 { get; }
+       // public string PayloadData6 { get; }
+       // public string UserName { get; }
+        //public string RemoteHost { get; }
+       // public string ExecutableInfo { get; }
+       // public string MapDescription { get; }
 
 
         public string Computer { get; }
 
          public string Payload { get; set; }
 
-        public string UserId { get; }
+       // public string UserId { get; }
         public string Channel { get; }
         public string Provider { get; }
         public int EventId { get; }
-        public string EventRecordId { get; }
-        public int ProcessId { get; }
-        public int ThreadId { get; }
-        public int Level { get; }
+      //  public string EventRecordId { get; }
+      //  public int ProcessId { get; }
+       // public int ThreadId { get; }
+       // public int Level { get; }
         public string SourceFile { get; set; }
 
         /// <summary>
@@ -264,7 +262,7 @@ namespace evtx
 
         [IgnoreDataMember] public uint Size { get; }
 
-        public long RecordNumber { get; }
+        [IgnoreDataMember] public long RecordNumber { get; }
 
         [IgnoreDataMember] public DateTimeOffset Timestamp { get; }
 
